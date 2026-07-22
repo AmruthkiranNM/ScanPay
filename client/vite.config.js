@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import fs from 'fs'
 import path from 'path'
 
@@ -14,6 +15,7 @@ const httpsConfig = fs.existsSync(path.join(certDir, 'cert.pem'))
 
 export default defineConfig({
   plugins: [
+    basicSsl(),
     tailwindcss(),
     react(),
     VitePWA({
@@ -53,5 +55,12 @@ export default defineConfig({
     https: httpsConfig, // mkcert cert — trusted by Chrome, no SSL errors
     port: 5173,
     strictPort: false,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
 })

@@ -21,10 +21,13 @@ export default function Home() {
     try {
       const result = await runSync();
       if (result.serverWallet) {
+        const all = await getAllTxns();
+        const localLocked = all.filter(t => t.status === 'pending').reduce((sum, t) => sum + t.amount, 0);
+        const localUnconfirmed = all.filter(t => t.status === 'unconfirmed_received').reduce((sum, t) => sum + t.amount, 0);
         await updateBalance({
           confirmed_bal: result.serverWallet.confirmed_bal,
-          locked_bal: result.serverWallet.locked_bal || 0,
-          unconfirmed_received: 0,
+          locked_bal: localLocked,
+          unconfirmed_received: localUnconfirmed,
         });
       }
       await loadWalletState();
@@ -145,7 +148,7 @@ export default function Home() {
     <div>
     <p className="label-md uppercase tracking-[0.2em] text-slate-500 font-bold text-xs mb-2">Total Balance</p>
     <h3 className="text-6xl font-black tracking-tighter text-white font-display">
-    <span className="text-primary-fixed-dim opacity-50 text-4xl mr-1">₹</span>{(confirmed_bal / 100).toLocaleString('en-IN')}<span className="text-3xl font-medium opacity-70">.00</span>
+    <span className="text-primary-fixed-dim opacity-50 text-4xl mr-1">₹</span>{((confirmed_bal - locked_bal + (unconfirmed_received || 0)) / 100).toLocaleString('en-IN')}<span className="text-3xl font-medium opacity-70">.00</span>
     </h3>
     </div>
     <div className="bg-primary/10 px-3 py-1 rounded-full border border-primary/20 flex items-center gap-2">
@@ -174,6 +177,10 @@ export default function Home() {
     </button>
     <button onClick={() => navigate('/receive')} className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm tracking-wide hover:bg-white/10 active:scale-[0.98] transition-transform">
         Generate Invoice
+    </button>
+    <button onClick={() => navigate('/audiopay')} className="flex-1 py-3 rounded-xl bg-white/5 border border-primary/30 text-primary font-bold text-sm tracking-wide hover:bg-primary/10 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+        <span className="material-symbols-outlined text-lg">contactless</span>
+        AudioPay
     </button>
     </div>
     </div>

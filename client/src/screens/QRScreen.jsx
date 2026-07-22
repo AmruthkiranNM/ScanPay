@@ -224,7 +224,7 @@ export default function QRScreen() {
   return (
     <div className="fixed inset-0 bg-background flex flex-col">
       <header className="flex items-center gap-4 px-6 pt-8 pb-4">
-        <button onClick={handleCancel} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/5">
+        <button onClick={() => navigate('/home', { replace: true })} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/5">
           <span className="material-symbols-outlined text-slate-400">arrow_back</span>
         </button>
         <h2 className="text-xl font-bold text-white">Payment QR</h2>
@@ -259,16 +259,21 @@ export default function QRScreen() {
           {fmt(p2pAmount || 0)} locked from your balance. Auto-unlocks on expiry.
         </div>
 
-        <div className="flex gap-3 w-full max-w-xs">
-          <button
-            onClick={() => navigator.share?.({ title: 'Pay me via PocketPay' })}
-            className="flex-1 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary font-bold text-xs uppercase tracking-widest"
-          >
-            Share QR
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <button onClick={() => navigate('/home', { replace: true })} className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-container to-primary text-white font-bold text-sm tracking-wide shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform">
+            Done
           </button>
-          <button onClick={handleCancel} className="flex-1 py-3 rounded-xl bg-error/10 border border-error/20 text-error font-bold text-xs uppercase tracking-widest">
-            Cancel
-          </button>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={() => navigator.share?.({ title: 'Pay me via PocketPay' })}
+              className="flex-1 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary font-bold text-xs uppercase tracking-widest"
+            >
+              Share QR
+            </button>
+            <button onClick={handleCancel} className="flex-1 py-3 rounded-xl bg-error/10 border border-error/20 text-error font-bold text-xs uppercase tracking-widest">
+              Cancel Payment
+            </button>
+          </div>
         </div>
       </div>
     </div>

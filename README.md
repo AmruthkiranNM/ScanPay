@@ -162,7 +162,7 @@ PocketPay demonstrates that digital payments can function independently of inter
 * Anush N
 * Laksthith
 * Yashas G
-* Yateen Shetty B
+* Yatheen Shetty B
 
 ---
 

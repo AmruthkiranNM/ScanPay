@@ -184,7 +184,13 @@ export default function Login() {
             // Try fetching fresh balance
             try {
               const freshWallet = await getBalance();
-              if (freshWallet) await updateBalance({ confirmed_bal: freshWallet.confirmed_bal, locked_bal: freshWallet.locked_bal });
+              if (freshWallet) {
+                await updateBalance({ 
+                  confirmed_bal: freshWallet.confirmed_bal, 
+                  locked_bal: freshWallet.locked_bal,
+                  nonce: freshWallet.nonce_counter || 0
+                });
+              }
             } catch (apiErr) { console.warn('Offline mode login — using local balance'); }
           }
           
@@ -235,12 +241,29 @@ export default function Login() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-primary/8 blur-[100px] rounded-full pointer-events-none" />
 
       {/* Top Bar */}
-      <header className="flex items-center gap-3 px-6 pt-10 pb-4 flex-shrink-0 relative z-10">
-        <button onClick={() => step === 2 ? setStep(1) : navigate(-1)}
-          className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors">
-          <span className="material-symbols-outlined text-slate-400">arrow_back</span>
+      <header className="flex items-center gap-3 px-6 pt-10 pb-4 flex-shrink-0 relative z-10 justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={() => step === 2 ? setStep(1) : navigate(-1)}
+            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors">
+            <span className="material-symbols-outlined text-slate-400">arrow_back</span>
+          </button>
+          <h2 className="text-lg font-bold text-white">Sign In</h2>
+        </div>
+        <button 
+          onClick={async () => {
+            if (window.confirm('Wipe all local data and reset app?')) {
+              localStorage.clear();
+              try {
+                const { wipeKeys } = await import('../services/storageService');
+                await wipeKeys();
+              } catch(e) {}
+              window.location.href = '/';
+            }
+          }}
+          className="px-3 py-1.5 rounded-full bg-error/10 text-error text-xs font-bold border border-error/20"
+        >
+          Reset App
         </button>
-        <h2 className="text-lg font-bold text-white">Sign In</h2>
       </header>
 
       {/* ── STEP 1: Phone ── */}

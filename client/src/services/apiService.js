@@ -3,7 +3,7 @@ import axios from 'axios';
 // Auto-detect protocol: if page is served over HTTPS, API calls must also use HTTPS
 // to avoid mixed-content blocking on mobile browsers.
 // Falls back to http:// only when the page itself is http://
-const API_BASE = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:3000`;
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 const api = axios.create({
   baseURL: API_BASE,

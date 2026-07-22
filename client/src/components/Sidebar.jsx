@@ -11,7 +11,7 @@ const WALLET_NAV = [
 
 const TOOLS_NAV = [
   { path: '/history',       label: 'History',   icon: 'history' },
-  { path: '/sync',          label: 'Network',   icon: 'cloud_sync' },
+  { path: '/audiopay',      label: 'AudioPay',  icon: 'contactless' },
   { path: '/notifications', label: 'Activity',  icon: 'notifications' },
   { path: '/merchant',      label: 'Merchant',  icon: 'storefront' },
 ];

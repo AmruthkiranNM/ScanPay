@@ -30,6 +30,7 @@ import Settings from './screens/Settings';
 
 import ScanQR from './screens/ScanQR';
 import SecureContextBanner from './components/SecureContextBanner';
+import AudioPayApp from './audiopay/App';
 
 // Auth screens render centered without sidebar
 function AuthLayout() {
@@ -90,6 +91,7 @@ const router = createHashRouter([
     { path: '/notifications', element: <Notifications /> },
     { path: '/profile', element: <Profile /> },
     { path: '/settings', element: <Settings /> },
+    { path: '/audiopay', element: <AudioPayApp /> },
   ]},
 ]);
 
@@ -116,6 +118,7 @@ export default function App() {
         await updateBalance({
           confirmed_bal: result.serverWallet.confirmed_bal,
           locked_bal: result.serverWallet.locked_bal || 0,
+          nonce: result.serverWallet.nonce_counter || 0,
           unconfirmed_received: 0, // Server balance is authoritative — clear local unconfirmed
         });
       }

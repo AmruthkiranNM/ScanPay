@@ -14,9 +14,13 @@ export async function runSync() {
   try {
     if (!hasToken()) throw new Error('Not authenticated — cannot sync');
 
-    // Get ALL pending and unconfirmed txns
+    // Get pending, failed, and unconfirmed_received txns
     const allTxns = await getAllTxns();
-    const pending = allTxns.filter(t => t.status === 'pending' || t.status === 'unconfirmed_received');
+    const pending = allTxns.filter(t => 
+      t.status === 'pending' || 
+      t.status === 'failed' || 
+      t.status === 'unconfirmed_received'
+    );
 
     if (pending.length === 0) return { confirmed: 0, failed: 0, results: [] };
 
@@ -62,6 +66,8 @@ export async function runSync() {
       if (r.status === 'confirmed') {
         await updateTxnStatus(r.id, 'confirmed');
         confirmed++;
+      } else if (r.status === 'pending') {
+        // Still waiting for receiver to sync, keep it pending
       } else {
         console.warn('[Sync] Failed txn:', r.id?.slice(0, 8), 'reason:', r.fail_reason);
         await updateTxnStatus(r.id, 'failed', r.fail_reason);
