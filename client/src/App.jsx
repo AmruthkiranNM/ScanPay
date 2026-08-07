@@ -30,7 +30,6 @@ import Settings from './screens/Settings';
 
 import ScanQR from './screens/ScanQR';
 import SecureContextBanner from './components/SecureContextBanner';
-import AudioPayApp from './audiopay/App';
 
 // Auth screens render centered without sidebar
 function AuthLayout() {
@@ -91,7 +90,6 @@ const router = createHashRouter([
     { path: '/notifications', element: <Notifications /> },
     { path: '/profile', element: <Profile /> },
     { path: '/settings', element: <Settings /> },
-    { path: '/audiopay', element: <AudioPayApp /> },
   ]},
 ]);
 

@@ -20,7 +20,6 @@ import Notifications from './screens/Notifications';
 import Profile from './screens/Profile';
 import Settings from './screens/Settings';
 import Recovery from './screens/Recovery';
-import AudioPayApp from './audiopay/App';
 
 export const router = createHashRouter([
   { path: '/',                  element: <Splash /> },
@@ -44,5 +43,4 @@ export const router = createHashRouter([
   { path: '/profile',           element: <Profile /> },
   { path: '/settings',          element: <Settings /> },
   { path: '/recovery',          element: <Recovery /> },
-  { path: '/audiopay',          element: <AudioPayApp /> },
 ]);
