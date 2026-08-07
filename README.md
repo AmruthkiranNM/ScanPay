@@ -1,4 +1,4 @@
-# PocketPay — Offline Digital Payment System
+# ScanPay — Offline Digital Payment System
 
 ## Problem Statement
 
@@ -21,7 +21,7 @@ To make UPI-like payments accessible in low-connectivity environments and improv
 
 ## Solution Overview
 
-PocketPay is an offline-first digital payment system that enables seamless peer-to-peer transactions without requiring WiFi, mobile data, or hotspot connectivity.
+ScanPay is an offline-first digital payment system that enables seamless peer-to-peer transactions without requiring WiFi, mobile data, or hotspot connectivity.
 
 The system uses offline QR-based payment exchange, allowing users to send and receive money even in zero-network conditions.
 
@@ -88,7 +88,7 @@ Final Status:
 
 ## Wallet Model
 
-PocketPay uses a prepaid wallet system:
+ScanPay uses a prepaid wallet system:
 
 * Users load money into wallet when online
 * Offline transactions use wallet balance
@@ -117,7 +117,7 @@ PocketPay uses a prepaid wallet system:
 
 ## Innovation and Impact
 
-PocketPay directly addresses the challenge of last-mile banking without internet by enabling:
+ScanPay directly addresses the challenge of last-mile banking without internet by enabling:
 
 * Financial access in rural and remote areas
 * Reliable transactions during network outages
@@ -152,17 +152,7 @@ Real-world deployment would require:
 
 ## Conclusion
 
-PocketPay demonstrates that digital payments can function independently of internet connectivity, making financial services more inclusive, resilient, and accessible.
-
----
-
-## Team Members
-
-
-* Anush N
-* Laksthith
-* Yashas G
-* Yatheen Shetty B
+ScanPay demonstrates that digital payments can function independently of internet connectivity, making financial services more inclusive, resilient, and accessible.
 
 ---
 
@@ -174,3 +164,4 @@ PocketPay demonstrates that digital payments can function independently of inter
 * Storage: IndexedDB
 * Security: Web Crypto API
 * QR: qrcode, html5-qrcode
+
