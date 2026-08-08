@@ -77,8 +77,8 @@ app.post('/api/send-otp', otpRequestLimiter, async (req, res) => {
     res.json({ success: true, message: 'OTP sent successfully', status: verification.status });
   } catch (error) {
     console.error('Send OTP Error:', error.message, error.code);
-    // Fallback to Mock OTP if Twilio trial limits or rate limits are hit
-    if (error.code === 60203 || error.code === 21608 || (error.message && error.message.includes('unverified'))) {
+    // Fallback to Mock OTP if Twilio trial limits, rate limits, or missing Verify SID (20404) are hit
+    if (error.code === 20404 || error.code === 60203 || error.code === 21608 || (error.message && error.message.includes('unverified'))) {
       console.log(`⚠️ Twilio limit hit. Falling back to MOCK OTP (123456) for ${phoneNumber}`);
       return res.json({ success: true, message: 'OTP sent (MOCK: 123456)', status: 'mocked' });
     }
@@ -282,7 +282,7 @@ app.get('/api/users/lookup', authMiddleware, (req, res) => {
 // ============================
 // START SERVER
 // ============================
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`\n🚀 PocketPay backend running on http://localhost:${port}`);
   console.log(`📱 Twilio Phone: ${process.env.TWILIO_PHONE_NUMBER || 'NOT SET'}`);
   console.log(`🔐 Verify SID: ${process.env.TWILIO_VERIFY_SID ? 'Configured' : 'NOT SET'}`);
