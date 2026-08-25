@@ -11,6 +11,9 @@ import { authMiddleware } from './middleware/auth.js';
 
 dotenv.config();
 
+// In-memory OTP storage: { "+1234567890": { otp: "123456", expiresAt: 1234567890000 } }
+const otpStore = new Map();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -48,7 +51,6 @@ const verifyLimiter = rateLimit({
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
   twilioConfigured: !!twilioClient,
-  verifyConfigured: !!process.env.TWILIO_VERIFY_SID,
   time: Date.now()
 }));
 
@@ -56,8 +58,8 @@ app.get('/api/health', (req, res) => res.json({
 // OTP: SEND (via Twilio Verify)
 // ============================
 app.post('/api/send-otp', otpRequestLimiter, async (req, res) => {
+  const { phoneNumber } = req.body;
   try {
-    const { phoneNumber } = req.body;
     if (!phoneNumber) return res.status(400).json({ error: 'Phone number is required' });
 
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
@@ -65,21 +67,37 @@ app.post('/api/send-otp', otpRequestLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Invalid phone format. Use E.164 format (e.g., +911234567890)' });
     }
 
-    if (!twilioClient || !process.env.TWILIO_VERIFY_SID) {
-      return res.status(500).json({ error: 'Twilio Verify service not configured' });
+    if (!twilioClient || !process.env.TWILIO_PHONE_NUMBER) {
+      return res.status(500).json({ error: 'Twilio SMS service not configured' });
     }
 
-    const verification = await twilioClient.verify.v2
-      .services(process.env.TWILIO_VERIFY_SID)
-      .verifications.create({ to: phoneNumber, channel: 'sms' });
+    // Generate random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store with 5 minute expiration
+    otpStore.set(phoneNumber, {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000
+    });
 
-    console.log(`📱 OTP sent to ${phoneNumber}, status: ${verification.status}`);
-    res.json({ success: true, message: 'OTP sent successfully', status: verification.status });
+    const message = await twilioClient.messages.create({
+      body: `Your ScanPay OTP is ${otp}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: phoneNumber
+    });
+
+    console.log(`📱 OTP sent to ${phoneNumber}, SID: ${message.sid}`);
+    res.json({ success: true, message: 'OTP sent successfully', status: 'pending' });
   } catch (error) {
     console.error('Send OTP Error:', error.message, error.code);
-    // Fallback to Mock OTP if Twilio trial limits, rate limits, or missing Verify SID (20404) are hit
-    if (error.code === 20404 || error.code === 60203 || error.code === 21608 || (error.message && error.message.includes('unverified'))) {
+    // Fallback to Mock OTP if Twilio trial limits or rate limits are hit
+    if (error.code === 572006 || error.code === 60203 || error.code === 21608 || (error.message && error.message.includes('unverified'))) {
       console.log(`⚠️ Twilio limit hit. Falling back to MOCK OTP (123456) for ${phoneNumber}`);
+      // Store the mock OTP just like a real one
+      otpStore.set(phoneNumber, {
+        otp: '123456',
+        expiresAt: Date.now() + 5 * 60 * 1000
+      });
       return res.json({ success: true, message: 'OTP sent (MOCK: 123456)', status: 'mocked' });
     }
     
@@ -97,25 +115,26 @@ app.post('/api/verify-otp', verifyLimiter, async (req, res) => {
     if (!phoneNumber || !otp) return res.status(400).json({ error: 'Phone number and OTP are required' });
     if (otp.length !== 6 || !/^\d{6}$/.test(otp)) return res.status(400).json({ error: 'OTP must be 6 digits' });
 
-    // Mock bypass for development/trial limits
-    if (otp === '123456') {
-      console.log(`✅ MOCK OTP verification successful for ${phoneNumber}`);
-      const sessionToken = crypto.randomBytes(32).toString('hex');
-      return res.json({ success: true, message: 'Verification successful (MOCKED)', sessionToken });
+    const storedOtpData = otpStore.get(phoneNumber);
+
+    if (!storedOtpData) {
+      return res.status(401).json({ valid: false, error: 'No OTP requested or expired.' });
     }
 
-    const verificationCheck = await twilioClient.verify.v2
-      .services(process.env.TWILIO_VERIFY_SID)
-      .verificationChecks.create({ to: phoneNumber, code: otp });
+    if (Date.now() > storedOtpData.expiresAt) {
+      otpStore.delete(phoneNumber);
+      return res.status(401).json({ valid: false, error: 'OTP has expired. Please request a new one.' });
+    }
 
-    console.log(`✅ OTP verification for ${phoneNumber}: ${verificationCheck.status}`);
-
-    if (verificationCheck.status === 'approved') {
-      // Generate a temporary session token (not the full JWT yet — that comes after registration)
+    if (storedOtpData.otp === otp) {
+      console.log(`✅ OTP verification successful for ${phoneNumber}`);
+      otpStore.delete(phoneNumber);
+      
       const sessionToken = crypto.randomBytes(32).toString('hex');
       res.json({ success: true, message: 'Verification successful', sessionToken });
     } else {
-      res.status(401).json({ valid: false, error: 'Invalid or expired OTP. Please try again.' });
+      console.log(`❌ Invalid OTP for ${phoneNumber}`);
+      res.status(401).json({ valid: false, error: 'Invalid OTP. Please try again.' });
     }
   } catch (error) {
     console.error('Verify OTP Error:', error.message);
@@ -285,7 +304,6 @@ app.get('/api/users/lookup', authMiddleware, (req, res) => {
 app.listen(port, '0.0.0.0', () => {
   console.log(`\n🚀 PocketPay backend running on http://localhost:${port}`);
   console.log(`📱 Twilio Phone: ${process.env.TWILIO_PHONE_NUMBER || 'NOT SET'}`);
-  console.log(`🔐 Verify SID: ${process.env.TWILIO_VERIFY_SID ? 'Configured' : 'NOT SET'}`);
   console.log(`⚠️  Trial account: Only verified numbers can receive OTPs.`);
   console.log(`   Verify numbers at: https://www.twilio.com/console/phone-numbers/verified\n`);
 });
