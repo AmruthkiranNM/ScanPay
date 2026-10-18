@@ -1,4 +1,4 @@
-live link - https://syncpay.acrossthe.cloud/
+live link - https://syncpay.acrossthe.cloud/#/
 
 # ScanPay — Offline Digital Payment System
 
